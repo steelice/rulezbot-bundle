@@ -1,0 +1,33 @@
+{
+  "description": "Bots bundle",
+  "name": "steelice/rulezdev-bundle",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "keywords": ["telegram", "bot"],
+  "authors": [
+    {
+      "name": "Steel Ice"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=8.0",
+    "symfony/http-kernel": "^6.1"
+  },
+  "require-dev": {
+
+  },
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+
+  "autoload": {
+    "psr-4": { "Rulezdev\\RulezbotBundle\\": "src/" }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.0-dev"
+    }
+  }
+}
