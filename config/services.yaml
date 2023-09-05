@@ -1,0 +1,30 @@
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    Rulezdev\RulezbotBundle\:
+        resource: '../src'
+        exclude:
+            - '../src/Entity'
+            - '../src/RulezdevRulezbotBundle.php'
+            - '../src/Model'
+            - '../src/Message'
+            - '../src/TgDataProxy'
+
+    Rulezdev\RulezbotBundle\BotModule\:
+        resource: '../src/BotModule/*.php'
+        exclude: '../src/{AbstractBotModule,BotModuleInterface.php}'
+        public: true
+
+
+    Rulezdev\RulezbotBundle\Service\ModuleService:
+        arguments:
+            - '%kernel.project_dir%/src/BotModule'
+
+    Rulezdev\RulezbotBundle\Service\BotService:
+        arguments:
+            - '%env(resolve:BOT_NAME)%'
