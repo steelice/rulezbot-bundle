@@ -47,7 +47,7 @@ class User implements HasFileEntityInterface
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $isSendQ;
 
-    #[ORM\Column(type: 'array', nullable: true)]
+    #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $customSettings = null;
 
     #[ORM\Column(type: 'string', length: 250, nullable: true)]
@@ -65,7 +65,7 @@ class User implements HasFileEntityInterface
     #[ORM\Column(name: 'sex', type: 'string', length: 1, options: ['default' => 'm'])]
     private string $gender = 'm';
 
-    #[ORM\Column(type: 'string', length: 2, options: ['default' => 'ru'])]
+    #[ORM\Column(type: 'string', length: 5, options: ['default' => 'ru'])]
     private string $lang = 'ru';
 
     #[ORM\Column(type: 'float', nullable: true)]
