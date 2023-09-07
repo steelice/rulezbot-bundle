@@ -3,6 +3,7 @@
 namespace Rulezdev\RulezbotBundle\Service;
 
 use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Rulezdev\RulezbotBundle\BotModule\AbstractBotModule;
@@ -12,6 +13,7 @@ use Rulezdev\RulezbotBundle\Entity\Chat;
 use Rulezdev\RulezbotBundle\Entity\ChatLog;
 use Rulezdev\RulezbotBundle\Entity\User;
 use Rulezdev\RulezbotBundle\Entity\UserInChat;
+use Rulezdev\RulezbotBundle\Exception\ModuleRuntimeException;
 use Rulezdev\RulezbotBundle\Helper\TgCallbackHelper;
 use Rulezdev\RulezbotBundle\Repository\BotInChatRepository;
 use Rulezdev\RulezbotBundle\Repository\ChatRepository;
@@ -37,6 +39,8 @@ class TgUpdateHandler implements ServiceSubscriberInterface
         protected readonly BotModuleList        $botModuleList,
         protected readonly ChatContainer $chatContainer,
         protected readonly ContainerInterface   $container,
+        protected readonly WorkflowService      $workflow,
+        protected readonly EntityManagerInterface $em,
     )
     {
     }
@@ -78,6 +82,10 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             }
 
             $logMessage = $this->chatLogService->logMessage($userInChat, $updateProxy);
+            $this->workflow->init($userInChat);
+            if ($wfModule = $userInChat->getWorkflowModule()) {
+                return $this->processModule($wfModule, $user, $chat, $updateProxy, $userInChat, $logMessage);
+            }
 
             $modules = $this->moduleService->modulesForChat($chat);
             foreach ($modules as $module) {
@@ -194,17 +202,25 @@ class TgUpdateHandler implements ServiceSubscriberInterface
         try {
             /** @var AbstractBotModule $worker */
             $worker = $this->container->get($className);
-            $worker->setModule($module);
+            $worker->configure($module, $this->chatContainer, $this->workflow);
 
             $result = $worker->processRequest($this->chatContainer);
             if (!$result) {
                 $this->logger->debug('Module ' . $className . ' is try to find answer, but cant');
             }
+        } catch (ModuleRuntimeException $e) {
+            $this->logger->critical('Error in module', ['error_in_module' => $className, 'exception' => $e]);
+
+            $this->chatContainer->reply($e->getMessage());
+
+            return false;
         } catch (Throwable $e) {
             $this->logger->critical('Error in module', ['error_in_module' => $className, 'exception' => $e]);
 
             return false;
         }
+
+        $this->em->flush();
 
         return $result;
     }

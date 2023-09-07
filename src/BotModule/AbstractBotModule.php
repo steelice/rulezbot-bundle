@@ -6,6 +6,7 @@ use Rulezdev\RulezbotBundle\Helper\TgCallbackHelper;
 use Rulezdev\RulezbotBundle\Entity\BotModule;
 use Rulezdev\RulezbotBundle\Entity\ChatLog;
 use Rulezdev\RulezbotBundle\Service\ChatContainer;
+use Rulezdev\RulezbotBundle\Service\WorkflowService;
 
 abstract class AbstractBotModule implements BotModuleInterface
 {
@@ -14,6 +15,8 @@ abstract class AbstractBotModule implements BotModuleInterface
     protected const DEFAULT_CONFIG = [];
 
     protected BotModule $module;
+    public ChatContainer $tg;
+    public WorkflowService $workflow;
 
     public static function getAlias(): string
     {
@@ -90,6 +93,19 @@ abstract class AbstractBotModule implements BotModuleInterface
     public function setModule(BotModule $module): static
     {
         $this->module = $module;
+
+        return $this;
+    }
+
+    public function configure(
+        BotModule $module,
+        ChatContainer $tg,
+        WorkflowService $workflow,
+    ): static
+    {
+        $this->setModule($module);
+        $this->tg = $tg;
+        $this->workflow = $workflow;
 
         return $this;
     }

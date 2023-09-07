@@ -46,5 +46,8 @@
     "branch-alias": {
       "dev-main": "1.0-dev"
     }
+  },
+  "require-dev": {
+    "symfony/maker-bundle": "^1.50"
   }
 }

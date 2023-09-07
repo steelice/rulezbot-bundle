@@ -77,6 +77,9 @@ class UserInChat
     #[ORM\Column(nullable: true)]
     private ?array $workflowData = [];
 
+    #[ORM\ManyToOne]
+    private ?BotModule $workflowModule = null;
+
     public function __construct(Chat $chat, User $user)
     {
         $this->how2call = $user->getHow2call();
@@ -294,4 +297,17 @@ class UserInChat
 
         return $this;
     }
+
+    public function getWorkflowModule(): ?BotModule
+    {
+        return $this->workflowModule;
+    }
+
+    public function setWorkflowModule(?BotModule $workflowModule): static
+    {
+        $this->workflowModule = $workflowModule;
+
+        return $this;
+    }
+
 }
