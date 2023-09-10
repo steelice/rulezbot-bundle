@@ -28,18 +28,18 @@ use Throwable;
 class TgUpdateHandler implements ServiceSubscriberInterface
 {
     public function __construct(
-        protected readonly BotService           $botService,
-        protected readonly UserRepository       $userRepository,
-        protected readonly ChatRepository       $chatRepository,
-        protected readonly ChatLogService       $chatLogService,
-        protected readonly LoggerInterface      $logger,
-        protected readonly UserInChatRepository $userInChatRepository,
-        protected readonly BotInChatRepository  $botsInChatsRepository,
-        protected readonly ModuleService        $moduleService,
-        protected readonly BotModuleList        $botModuleList,
-        protected readonly ChatContainer $chatContainer,
-        protected readonly ContainerInterface   $container,
-        protected readonly WorkflowService      $workflow,
+        protected readonly BotService             $botService,
+        protected readonly UserRepository         $userRepository,
+        protected readonly ChatRepository         $chatRepository,
+        protected readonly ChatLogService         $chatLogService,
+        protected readonly LoggerInterface        $logger,
+        protected readonly UserInChatRepository   $userInChatRepository,
+        protected readonly BotInChatRepository    $botsInChatsRepository,
+        protected readonly ModuleService          $moduleService,
+        protected readonly BotModuleList          $botModuleList,
+        protected readonly ChatContainer          $chatContainer,
+        protected readonly ContainerInterface     $container,
+        protected readonly WorkflowService        $workflow,
         protected readonly EntityManagerInterface $em,
     )
     {
@@ -83,16 +83,18 @@ class TgUpdateHandler implements ServiceSubscriberInterface
 
             $logMessage = $this->chatLogService->logMessage($userInChat, $updateProxy);
             $this->workflow->init($userInChat);
+            $this->chatContainer->fill($updateProxy, $chat, $user, $userInChat, $logMessage);
+
             if ($wfModule = $userInChat->getWorkflowModule()) {
-                return $this->processModule($wfModule, $user, $chat, $updateProxy, $userInChat, $logMessage);
+                return $this->processModule($wfModule);
             }
 
             $modules = $this->moduleService->modulesForChat($chat);
             foreach ($modules as $module) {
-                if (!$module->getIsEnabled()) {
+                if (!$module->getIsEnabled() || !$this->isModuleSupport($module->getModule(), $updateProxy)) {
                     continue;
                 }
-                $result = $this->processModule($module->getModule(), $user, $chat, $updateProxy, $userInChat, $logMessage);
+                $result = $this->processModule($module->getModule());
                 if ($result) {
                     return true;
                 }
@@ -170,13 +172,9 @@ class TgUpdateHandler implements ServiceSubscriberInterface
         return true;
     }
 
-    protected function processModule(
+    protected function isModuleSupport(
         BotModule   $module,
-        User        $user,
-        Chat        $chat,
-        UpdateProxy $update,
-        UserInChat  $userInChat,
-        ChatLog     $logMessage,
+        UpdateProxy $update
     ): bool
     {
         $className = $module->getClassName();
@@ -193,11 +191,18 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             return false;
         }
 
-        $this->chatContainer->fill($update, $chat, $user, $userInChat, $logMessage);
-
         if (!$className::isSupport($update->getType()) || !$className::checkPrecondition($this->chatContainer)) {
             return false;
         }
+
+        return true;
+    }
+
+    protected function processModule(
+        BotModule   $module,
+    ): bool
+    {
+        $className = $module->getClassName();
 
         try {
             /** @var AbstractBotModule $worker */
@@ -227,6 +232,6 @@ class TgUpdateHandler implements ServiceSubscriberInterface
 
     public static function getSubscribedServices(): array
     {
-        return BotModuleList::getClassList(__DIR__. '/../BotModule');
+        return BotModuleList::getClassList(__DIR__ . '/../BotModule');
     }
 }
