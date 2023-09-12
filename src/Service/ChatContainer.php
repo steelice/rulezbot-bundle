@@ -2,6 +2,7 @@
 
 namespace Rulezdev\RulezbotBundle\Service;
 
+use Exception;
 use Rulezdev\RulezbotBundle\Entity\Chat;
 use Rulezdev\RulezbotBundle\Entity\ChatLog;
 use Rulezdev\RulezbotBundle\Entity\User;
@@ -19,6 +20,8 @@ class ChatContainer
     public UserInChat $userInChat;
     public ChatLog $logMessage;
 
+    protected string $parseMode = BotService::PARSE_MODE_MARKDOWN;
+
     public function __construct(
         private readonly BotService          $botService,
         private readonly TranslatorInterface $translator,
@@ -32,7 +35,7 @@ class ChatContainer
         User        $user,
         UserInChat  $userInChat,
         ChatLog     $logMessage
-    )
+    ): void
     {
         $this->update = $update;
         $this->chat = $chat;
@@ -91,23 +94,21 @@ class ChatContainer
 
     public function reply(
         string|array $text,
-        string       $parseMode = BotService::PARSE_MODE_MARKDOWN,
         ?BaseType    $replyMarkup = null,
         bool         $disablePreview = false
     ): bool
     {
-        return $this->botService->sendMessage($this->chat->getMsgChatId(), $text, $parseMode, null, $replyMarkup, $disablePreview);
+        return $this->botService->sendMessage($this->chat->getMsgChatId(), $text, $this->parseMode, null, $replyMarkup, $disablePreview);
     }
 
     public function replyTranslated(
         string|array $text,
         array        $params = [],
-        string       $parseMode = BotService::PARSE_MODE_MARKDOWN,
         ?BaseType    $replyMarkup = null,
         bool         $disablePreview = false
     ): bool
     {
-        return $this->reply($this->trans($text, $params), $parseMode, $replyMarkup, $disablePreview);
+        return $this->reply($this->trans($text, $params), $replyMarkup, $disablePreview);
     }
 
     public function replySticker(
@@ -128,12 +129,12 @@ class ChatContainer
         return null;
     }
 
-    public function replyToMessage(array|string $msg, $replyMode = BotService::PARSE_MODE_MARKDOWN, $replyMarkup = null, $disablePreview = false): bool
+    public function replyToMessage(array|string $msg, $replyMarkup = null, $disablePreview = false): bool
     {
         return $this->botService->sendMessage(
             $this->chat->getMsgChatId(),
             $msg,
-            $replyMode,
+            $this->parseMode,
             $this->update->message->getId(),
             $replyMarkup,
             $disablePreview
@@ -190,7 +191,7 @@ class ChatContainer
 
     /**
      * Хелпер для возвращения вероятности «в 3х из 100»
-     * @throws \Exception
+     * @throws Exception
      */
     public function chance(int $chances, int $of = 100): bool
     {
@@ -202,17 +203,18 @@ class ChatContainer
         return $this->update->message;
     }
 
-    public function setWorkflow(string $workflow, string $stage = null): void
-    {
-        $this->userInChat->setWorkflow($workflow);
-        $this->userInChat->setWorkflowStage($stage);
-    }
-
     public function isCommand(string $string): bool
     {
         return $this->matchFullKeyword([
                 '^/' . $string . '$',
                 '^/' . $string . '@' . $this->botService->entity->getName() . '$',
             ]) !== null;
+    }
+
+    public function setParseMode(string $parseMode): static
+    {
+        $this->parseMode = $parseMode;
+
+        return $this;
     }
 }
