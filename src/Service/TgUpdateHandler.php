@@ -151,7 +151,7 @@ class TgUpdateHandler implements ServiceSubscriberInterface
         $callbackMethod = 'callback_' . $callbackHelper->getMethod();
 
         if (method_exists($worker, $callbackMethod)) {
-            return $module->$callbackMethod($callbackHelper);
+            return $worker->$callbackMethod($callbackHelper);
         }
 
         if (!method_exists($worker, 'processCallback')) {
