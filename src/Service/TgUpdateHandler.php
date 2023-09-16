@@ -150,17 +150,17 @@ class TgUpdateHandler implements ServiceSubscriberInterface
 
         $callbackMethod = 'callback_' . $callbackHelper->getMethod();
 
-        if (method_exists($module, $callbackMethod)) {
+        if (method_exists($worker, $callbackMethod)) {
             return $module->$callbackMethod($callbackHelper);
         }
 
-        if (!method_exists($module, 'processCallback')) {
+        if (!method_exists($worker, 'processCallback')) {
             $this->logger->error('Class ' . $className . ' not support callbacks!');
 
             return false;
         }
 
-        return $module->processCallback($callbackHelper);
+        return $worker->processCallback($callbackHelper);
     }
 
     private function processPreCheckoutQuery(Update $update): bool
