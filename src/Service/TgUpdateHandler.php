@@ -9,10 +9,6 @@ use Psr\Log\LoggerInterface;
 use Rulezdev\RulezbotBundle\BotModule\AbstractBotModule;
 use Rulezdev\RulezbotBundle\BotModule\BotModuleList;
 use Rulezdev\RulezbotBundle\Entity\BotModule;
-use Rulezdev\RulezbotBundle\Entity\Chat;
-use Rulezdev\RulezbotBundle\Entity\ChatLog;
-use Rulezdev\RulezbotBundle\Entity\User;
-use Rulezdev\RulezbotBundle\Entity\UserInChat;
 use Rulezdev\RulezbotBundle\Exception\ModuleRuntimeException;
 use Rulezdev\RulezbotBundle\Helper\TgCallbackHelper;
 use Rulezdev\RulezbotBundle\Repository\BotInChatRepository;
@@ -139,6 +135,12 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             return false;
         }
 
+        $callbackMethod = 'callback_' . $callbackHelper->getMethod();
+
+        if (method_exists($className, $callbackMethod)) {
+            return $className->$callbackMethod($callbackHelper);
+        }
+
         if (!method_exists($className, 'processCallback')) {
             $this->logger->error('Class ' . $className . ' not support callbacks!');
 
@@ -199,7 +201,7 @@ class TgUpdateHandler implements ServiceSubscriberInterface
     }
 
     protected function processModule(
-        BotModule   $module,
+        BotModule $module,
     ): bool
     {
         $className = $module->getClassName();
