@@ -3,6 +3,7 @@
 namespace Rulezdev\RulezbotBundle\Repository;
 
 use Rulezdev\RulezbotBundle\Service\BotService;
+use Rulezdev\RulezbotBundle\TgDataProxy\ChatDataProxy;
 use Rulezdev\RulezbotBundle\TgDataProxy\MessageDataProxy;
 use Rulezdev\RulezbotBundle\TgDataProxy\UpdateProxy;
 use Carbon\Carbon;
@@ -31,8 +32,6 @@ class ChatRepository extends ServiceEntityRepository
         parent::__construct($registry, Chat::class);
     }
 
-
-
     public function getChatByMessage(MessageDataProxy $message): Chat
     {
         if ($chat = $this->findOneBy(['msgChatId' => $message->chat->getId()])) {
@@ -43,6 +42,27 @@ class ChatRepository extends ServiceEntityRepository
         $chat
             ->setName($message->chat->getName())
             ->setIsPrivate($message->chat->isPrivate());
+
+        $this->_em->persist($chat);
+
+        $botInChat = new BotInChat($this->botService->getEntity(), $chat);
+        $this->_em->persist($botInChat);
+
+        $this->_em->flush();
+
+        return $chat;
+    }
+
+    public function getChatByTgChat(ChatDataProxy $chatDataProxy): Chat
+    {
+        if ($chat = $this->findOneBy(['msgChatId' => $chatDataProxy->getId()])) {
+            return $chat;
+        }
+
+        $chat = new Chat($chatDataProxy->getId(), $chatDataProxy->getType(), $this->botService->entity->getNetworkId());
+        $chat
+            ->setName($chatDataProxy->getName())
+            ->setIsPrivate($chatDataProxy->isPrivate());
 
         $this->_em->persist($chat);
 

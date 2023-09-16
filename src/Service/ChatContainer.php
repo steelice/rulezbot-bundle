@@ -217,4 +217,25 @@ class ChatContainer
 
         return $this;
     }
+
+    public function setChat(Chat $chat): static
+    {
+        $this->chat = $chat;
+
+        return $this;
+    }
+
+    public function setUser(User $user): static
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function setUserInChat(UserInChat $userInChat): static
+    {
+        $this->userInChat = $userInChat;
+
+        return $this;
+    }
 }

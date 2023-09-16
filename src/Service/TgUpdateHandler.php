@@ -15,6 +15,7 @@ use Rulezdev\RulezbotBundle\Repository\BotInChatRepository;
 use Rulezdev\RulezbotBundle\Repository\ChatRepository;
 use Rulezdev\RulezbotBundle\Repository\UserInChatRepository;
 use Rulezdev\RulezbotBundle\Repository\UserRepository;
+use Rulezdev\RulezbotBundle\TgDataProxy\ChatDataProxy;
 use Rulezdev\RulezbotBundle\TgDataProxy\UpdateProxy;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use TelegramBot\Api\Types\Message;
@@ -124,6 +125,13 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             $this->botService
         );
 
+        $chat = $this->chatRepository->getChatByTgChat(new ChatDataProxy($update->getCallbackQuery()->getMessage()->getChat()));
+        $user = $this->userRepository->getOrCreateUser($update->getCallbackQuery()->getFrom());
+
+        $userInChat = $this->userInChatRepository->getOrCreate($user, $chat);
+
+        $this->workflow->init($userInChat);
+
         if (!$callbackHelper->getModuleName()) {
             return false;
         }
@@ -143,6 +151,7 @@ class TgUpdateHandler implements ServiceSubscriberInterface
 
             return false;
         }
+        $this->chatContainer->setChat($chat)->setUser($user)->setUserInChat($userInChat);
 
         /** @var AbstractBotModule $worker */
         $worker = $this->container->get($className);
