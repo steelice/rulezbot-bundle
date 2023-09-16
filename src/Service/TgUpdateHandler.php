@@ -135,19 +135,32 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             return false;
         }
 
-        $callbackMethod = 'callback_' . $callbackHelper->getMethod();
+        $module = $this->moduleService->getModuleRepository()->getModule($callbackHelper->getModuleName(), $className);
+        if (!$module) {
+            $this->logger->error('Module ' . $callbackHelper->getModuleName() . ' not exists!', [
+                'update' => $update
+            ]);
 
-        if (method_exists($className, $callbackMethod)) {
-            return $className->$callbackMethod($callbackHelper);
+            return false;
         }
 
-        if (!method_exists($className, 'processCallback')) {
+        /** @var AbstractBotModule $worker */
+        $worker = $this->container->get($className);
+        $worker->configure($module, $this->chatContainer, $this->workflow);
+
+        $callbackMethod = 'callback_' . $callbackHelper->getMethod();
+
+        if (method_exists($module, $callbackMethod)) {
+            return $module->$callbackMethod($callbackHelper);
+        }
+
+        if (!method_exists($module, 'processCallback')) {
             $this->logger->error('Class ' . $className . ' not support callbacks!');
 
             return false;
         }
 
-        return false;
+        return $module->processCallback($callbackHelper);
     }
 
     private function processPreCheckoutQuery(Update $update): bool
