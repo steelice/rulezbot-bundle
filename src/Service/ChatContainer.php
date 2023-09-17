@@ -112,6 +112,17 @@ class ChatContainer
         return $this->reply($this->trans($text, $params), $replyMarkup, $disablePreview);
     }
 
+    public function editTranslated(
+        int|string   $msgId,
+        string|array $text,
+        array        $params = [],
+        ?BaseType    $replyMarkup = null,
+        bool         $disablePreview = false
+    ): bool
+    {
+        return $this->editMessage($msgId, $this->trans($text, $params), $replyMarkup, $disablePreview);
+    }
+
     public function replySticker(
         string|array $sticker,
                      $replyMarkup = null,
