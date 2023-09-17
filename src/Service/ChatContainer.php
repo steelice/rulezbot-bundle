@@ -154,6 +154,20 @@ class ChatContainer
         return true;
     }
 
+    public function editMessage(int $msgId, string|array $text, $replyMarkup = null, $disablePreview = false): bool
+    {
+        $this->botService->api->editMessageText(
+            $this->chat->getMsgChatId(),
+            $msgId,
+            $text,
+            $this->parseMode,
+            $disablePreview,
+            $replyMarkup,
+        );
+
+        return true;
+    }
+
     public function isPrivateRequest(): bool
     {
         if (!$this->update->message) {
