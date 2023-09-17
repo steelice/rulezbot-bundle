@@ -55,6 +55,24 @@ class WorkflowService
         return $this;
     }
 
+    public function setDataItem(string $key, mixed $value): self
+    {
+        $this->uic->setWorkflowDataItem($key, $value);
+        $this->userInChatRepository->save($this->uic, true);
+
+        return $this;
+    }
+
+    public function getData(): array
+    {
+        return $this->uic->getWorkflowData() ?? [];
+    }
+
+    public function getDataItem(string $key, mixed $default = null): mixed
+    {
+        return $this->uic->getWorkflowDataItem($key, $default);
+    }
+
     /**
      * Clear all workflow data
      *
