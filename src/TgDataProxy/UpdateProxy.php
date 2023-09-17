@@ -13,6 +13,10 @@ class UpdateProxy
     {
         if ($this->update->getMessage()) {
             $this->message = new MessageDataProxy($this->update->getMessage());
+        } elseif ($this->update->getCallbackQuery()?->getMessage()) {
+            $this->message = new MessageDataProxy($this->update->getCallbackQuery()->getMessage());
+        } else {
+            $this->message = null;
         }
     }
 
@@ -46,6 +50,11 @@ class UpdateProxy
     public function getOnlyText(bool $lower): string
     {
         return $this->message ? $this->message->getOnlyText($lower) : '';
+    }
+
+    public function getMessageId(): ?int
+    {
+        return $this->message?->getId();
     }
 
 }
