@@ -233,6 +233,21 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             $worker = $this->container->get($className);
             $worker->configure($module, $this->chatContainer, $this->workflow);
 
+            if (($stage = $this->workflow->getStage())) {
+                $stageMethod = 'processRequest_' . $stage;
+                if (method_exists($worker, $stageMethod)) {
+                    $result = $worker->$stageMethod();
+                    if (!$result) {
+                        $this->logger->debug('Module ' . $className . ' is try to find answer, but cant');
+
+                        return false;
+                    }
+
+                    return $result;
+                }
+            }
+
+
             $result = $worker->processRequest($this->chatContainer);
             if (!$result) {
                 $this->logger->debug('Module ' . $className . ' is try to find answer, but cant');

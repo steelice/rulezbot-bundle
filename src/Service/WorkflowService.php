@@ -42,6 +42,11 @@ class WorkflowService
         return $this;
     }
 
+    public function getStage(): ?string
+    {
+        return $this->uic->getWorkflowStage();
+    }
+
     public function setData(?array $data): self
     {
         $this->uic->setWorkflowData($data);
