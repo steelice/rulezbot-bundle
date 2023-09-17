@@ -254,6 +254,9 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             }
         } catch (ModuleRuntimeException $e) {
             $this->logger->critical('Error in module', ['error_in_module' => $className, 'exception' => $e]);
+            if ($e->isClearWorkflow) {
+                $this->workflow->clear();
+            }
 
             $this->chatContainer->reply($e->getMessage());
 
