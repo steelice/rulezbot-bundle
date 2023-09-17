@@ -11,6 +11,7 @@ use Rulezdev\RulezbotBundle\TgDataProxy\MessageDataProxy;
 use Rulezdev\RulezbotBundle\TgDataProxy\UpdateProxy;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use TelegramBot\Api\BaseType;
+use TelegramBot\Api\Types\Message;
 
 class ChatContainer
 {
@@ -139,6 +140,18 @@ class ChatContainer
             $replyMarkup,
             $disablePreview
         );
+    }
+
+    public function deleteMessage(int $msgId): bool
+    {
+        return $this->botService->api->deleteMessage($this->chat->getMsgChatId(), $msgId);
+    }
+
+    public function resetKeyboard(int $msgId, $newReplyMarkup = null): bool
+    {
+        $this->botService->api->editMessageReplyMarkup($this->chat->getMsgChatId(), $msgId, $newReplyMarkup);
+
+        return true;
     }
 
     public function isPrivateRequest(): bool
