@@ -91,4 +91,9 @@ class WorkflowService
         return $this;
     }
 
+    public function getModule(): ?string
+    {
+        return $this->uic->getWorkflowModule()?->getClassName();
+    }
+
 }
