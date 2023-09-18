@@ -235,6 +235,7 @@ class TgUpdateHandler implements ServiceSubscriberInterface
 
             if ($this->workflow->getModule() && ($stage = $this->workflow->getStage())) {
                 $stageMethod = 'processRequest_' . $stage;
+                $this->logger->info('Module ' . $className . ' try to exec stage ' . $stageMethod . '...');
                 if (method_exists($worker, $stageMethod)) {
                     $result = $worker->$stageMethod();
                     if (!$result) {
@@ -244,6 +245,9 @@ class TgUpdateHandler implements ServiceSubscriberInterface
                     }
 
                     return $result;
+                } else {
+                    $this->logger->warning('Module ' . $className . ' stageMethod ' . $stageMethod . ' does not exists!');
+
                 }
             }
 
