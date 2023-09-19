@@ -83,7 +83,14 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             $this->chatContainer->fill($updateProxy, $chat, $user, $userInChat, $logMessage);
 
             if ($wfModule = $userInChat->getWorkflowModule()) {
-                return $this->processModule($wfModule);
+                try {
+                    return $this->processModule($wfModule);
+                } catch (Throwable $e) {
+                    $this->chatContainer->reply('Some error');
+                    $this->logger->critical('Error in module', ['error_in_module' => $wfModule->getClassName(), 'exception' => $e]);
+
+                    return false;
+                }
             }
 
             $modules = $this->moduleService->modulesForChat($chat);
