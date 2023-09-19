@@ -8,16 +8,27 @@ use TelegramBot\Api\Types\Update;
 class UpdateProxy
 {
     public readonly ?MessageDataProxy $message;
+    public readonly bool $isEdited;
+    public readonly bool $isUpdateSupported;
 
     public function __construct(public readonly Update $update)
     {
+        $isUpdateSupported = true;
+        $isEdited = false;
         if ($this->update->getMessage()) {
             $this->message = new MessageDataProxy($this->update->getMessage());
         } elseif ($this->update->getCallbackQuery()?->getMessage()) {
             $this->message = new MessageDataProxy($this->update->getCallbackQuery()->getMessage());
+        } elseif ($this->update->getEditedMessage()){
+            $this->message = new MessageDataProxy($this->update->getEditedMessage(), true);
+            $isEdited = true;
         } else {
             $this->message = null;
+            $isUpdateSupported = false;
         }
+
+        $this->isEdited = $isEdited;
+        $this->isUpdateSupported = $isUpdateSupported;
     }
 
     public function getType(): string
@@ -27,6 +38,7 @@ class UpdateProxy
         }
 
         return match (true) {
+            $this->update->getCallbackQuery()?->getMessage() !== null => ChatLog::TYPE_CALLBACK,
             default => ChatLog::TYPE_UNKNOWN
         };
     }

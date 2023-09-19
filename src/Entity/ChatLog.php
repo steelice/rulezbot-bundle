@@ -27,6 +27,8 @@ class ChatLog
     public const TYPE_VOICE = 'voice';
     public const TYPE_NEW_MEMBER = 'newmember';
     public const TYPE_LEFT_MEMBER = 'leftmember';
+    public const TYPE_CALLBACK = 'callback';
+    public const TYPE_EDITED_TEXT = 'edit_text';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -49,7 +51,7 @@ class ChatLog
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?User $toUser = null;
 
-    #[ORM\Column(type: 'string', length: 10, options: ['default' => 'text'])]
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'text'])]
     private string $type;
 
     #[ORM\Column(type: 'text')]

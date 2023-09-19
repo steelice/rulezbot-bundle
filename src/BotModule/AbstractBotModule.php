@@ -40,9 +40,8 @@ abstract class AbstractBotModule implements BotModuleInterface
 
     /**
      * Обрабатывает запрос внутри модуля
-     * @deprecated @param ChatContainer $tg
      */
-    public function processRequest(ChatContainer $tg): bool
+    public function processRequest(): bool
     {
         return false;
     }

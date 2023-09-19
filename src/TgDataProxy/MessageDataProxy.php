@@ -15,7 +15,10 @@ class MessageDataProxy
     public ChatDataProxy $chat;
     public ?MessageDataProxy $replyToMessage = null;
 
-    public function __construct(protected Message $message)
+    public function __construct(
+        protected Message $message,
+        public readonly bool $isEdited = false,
+    )
     {
         $this->from = new FromDataProxy($this->message->getFrom());
         $this->chat = new ChatDataProxy($this->message->getChat());
@@ -42,7 +45,7 @@ class MessageDataProxy
                 'height' => $photo->getHeight(),
                 'width'  => $photo->getWidth(),
             ], $this->message->getPhoto()), JSON_THROW_ON_ERROR),
-            ChatLog::TYPE_TEXT => $this->message->getText(),
+            ChatLog::TYPE_TEXT, ChatLog::TYPE_EDITED_TEXT => $this->message->getText(),
             ChatLog::TYPE_VOICE => $this->message->getVoice()->toJson(),
             ChatLog::TYPE_NEW_MEMBER => json_encode(array_map(static fn(User $user): array => [
                 'username'  => $user->getUsername(),
@@ -71,6 +74,7 @@ class MessageDataProxy
     public function getType(): string
     {
         return match (true) {
+            $this->isEdited && ($this->message->getText() !== null) => ChatLog::TYPE_EDITED_TEXT,
             $this->message->getSticker() !== null => ChatLog::TYPE_STICKER,
             $this->message->getVideo() !== null => ChatLog::TYPE_VIDEO,
             $this->message->getPhoto() !== null => ChatLog::TYPE_PHOTO,

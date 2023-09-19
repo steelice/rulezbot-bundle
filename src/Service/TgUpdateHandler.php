@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Rulezdev\RulezbotBundle\BotModule\AbstractBotModule;
 use Rulezdev\RulezbotBundle\BotModule\BotModuleList;
 use Rulezdev\RulezbotBundle\Entity\BotModule;
+use Rulezdev\RulezbotBundle\Entity\ChatLog;
 use Rulezdev\RulezbotBundle\Exception\ModuleRuntimeException;
 use Rulezdev\RulezbotBundle\Helper\TgCallbackHelper;
 use Rulezdev\RulezbotBundle\Repository\BotInChatRepository;
@@ -47,9 +48,15 @@ class TgUpdateHandler implements ServiceSubscriberInterface
         $result = null;
 
         $this->botService->getClient()->on(function (Update $update) use (&$result) {
+            $updateProxy = new UpdateProxy($update);
+
             $message = $update->getMessage();
 
             $this->logger->info('Got update:', ['update' => $update, 'message' => $update->getMessage()]);
+
+            if ($update->getEditedMessage()) {
+                $message = $update->getEditedMessage();
+            }
 
             if ($update->getCallbackQuery()) {
                 return $this->processCallback($update);
@@ -59,13 +66,11 @@ class TgUpdateHandler implements ServiceSubscriberInterface
                 return $this->processPreCheckoutQuery($update);
             }
 
-            if (!$message instanceof Message) {
+            if ($updateProxy->getType() === ChatLog::TYPE_UNKNOWN) {
                 $this->logger->warning('Message type unknown!');
 
                 return false;
             }
-
-            $updateProxy = new UpdateProxy($update);
 
             $chat = $this->chatRepository->getChatByMessage($updateProxy->message);
             $this->chatRepository->updateChatStats($chat, $updateProxy);
@@ -258,8 +263,18 @@ class TgUpdateHandler implements ServiceSubscriberInterface
                 }
             }
 
+            if ($this->chatContainer->update->isEdited && method_exists($worker, 'processEditedMessage')) {
+                $result = $worker->processEditedMessage();
+                if (!$result) {
+                    $this->logger->debug('Module ' . $className . ' is try to find answer for edited message, but cant');
 
-            $result = $worker->processRequest($this->chatContainer);
+                    return false;
+                }
+
+                return $result;
+            }
+
+            $result = $worker->processRequest();
             if (!$result) {
                 $this->logger->debug('Module ' . $className . ' is try to find answer, but cant');
             }
