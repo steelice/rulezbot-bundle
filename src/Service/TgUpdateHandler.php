@@ -293,7 +293,9 @@ class TgUpdateHandler implements ServiceSubscriberInterface
             return false;
         }
 
-        $this->em->flush();
+        if ($this->em->isOpen()) {
+            $this->em->flush();
+        }
 
         return $result;
     }
